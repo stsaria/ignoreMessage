@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class PostFC {
     public static final Object lock = new Object();
     public static String read() throws IOException {
-        Path path = Paths.get("records/message.record");
+        Path path = Paths.get("records/post.record");
         if (path.toFile().isFile()) {
             return Files.readString(path);
         } else {
@@ -21,7 +21,7 @@ public class PostFC {
         }
     }
     public static void append(String string) throws IOException {
-        File file = new File("records/message.record");
+        File file = new File("records/post.record");
         FileWriter writer = new FileWriter(file, true);
         writer.write(string+"\n");
         writer.close();

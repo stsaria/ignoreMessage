@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
         <title>IgnoreMessage</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/bulma-accordion@2.0.1/dist/css/bulma-accordion.min.css" rel="stylesheet">
+        <style>
+            pre {white-space: pre-wrap;}
+        </style>
     </head>
     <body>
         <nav class="navbar has-background-primary mb-4" role="navigation" aria-label="main navigation">
@@ -15,22 +20,240 @@
                 <a href="/" class="navbar-item"><h4 class="title is-4"><i class="bi bi-chat-fill"></i>&thinsp;IgnoreMessage</h4></a>
             </div>
         </nav>
-        <div class="container">
-            <div class="grid">
-                <div class="cell">
-                    <h3 class="title is-3">No reply chat is no need.</h3>
-                    <p>There are no rules. No categorized content (in other words, just chat). You can write anything. <span class="red-text text-accent-3">But</span> if there is no reply, it will be considered meaningless and the post will be deleted.</p>
+        <div class="container is-fluid">
+            <div class="is-hidden-mobile">
+                <div class="grid is-gap-4">
+                    <div class="cell is-col-span-2">
+                        <th:block th:switch="${result}">
+                            <p th:case ==-1 class="has-text-danger">A server-side problem has occurred.</p>
+                            <p th:case ==0 class="has-text-success">Success!</p>
+                            <p th:case ==1 class="has-text-danger">The author must be less than 30 bytes.</p>
+                            <p th:case ==2 class="has-text-danger">The content must be less than 512 bytes.</p>
+                            <p th:case ==3 class="has-text-danger">Root post not found./p>
+                            <p th:case ==4 class="has-text-danger">The maximum number of replies has been reached.。</p>
+                        </th:block>
+                        <h3 class="title is-3">New post</h3>
+                        <form action="root" method="post">
+                            <div class="field">
+                                <label class="label">Author</label>
+                                <div class="control">
+                                    <input class="input" type="text" name="author" required>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label class="label">Content</label>
+                                <div class="control">
+                                    <textarea class="textarea" cols="7" name="content" required></textarea>
+                                </div>
+                            </div>
+                            <div class="field is-grouped">
+                                <div class="control">
+                                    <button class="button is-link">Send</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="cell">
+                        <h4 class="title is-4">No reply chat is no need.</h4>
+                        <p class="mb-2">There are no rules. No categorized content (in other words, just chat).<br>
+                            You can write anything. <span class="red-text text-accent-3">But</span> if there is no reply,<br>
+                            it will be considered meaningless and the post will be deleted.</p>
+                        <h4 class="title is-4">Why need respond?</h4>
+                        <p class="mb-4">This is because many people don't really want to reply to posts that have gone unanswered for a long time (an easy example is comments on YouTube).<br>
+                            So we consider unanswered posts to be unavoidable, but wasteful.</p>
+                        <p class="has-text-centered">No response means you have been abandoned.<br>
+                            This is the chat algorithm that I find most efficient.</p>
+                    </div>
                 </div>
-                <div class="cell">
-                    <h4 class="title is-4">Why need respond?</h4>
-                    <p>This is because many people don't really want to reply to posts that have gone unanswered for a long time (an easy example is comments on YouTube). So we consider unanswered posts to be unavoidable, but wasteful.</p>
+                <hr>
+                <h3 class="title is-3">Posts</h3>
+                <div class="fixed-grid">
+                    <div class="grid">
+                        <th:block th:each="rootAndRepliesPost : ${rootAndRepliesPosts}">
+                            <div class="cell">
+                                <div class="card">
+                                    <header class="card-header">
+                                        <p class="card-header-title" th:text="${rootAndRepliesPost.rootPost.author}">author</p>
+                                    </header>
+                                    <div class="card-content">
+                                        <div class="grid is-gap-4">
+                                            <div class="cell is-col-span-2">
+                                                <div class="content">
+                                                    <p class="time" th:text="${rootAndRepliesPost.rootPost.sendUnixTime}">sendUnixTime</p>
+                                                    <pre class="has-background-white" th:text="${rootAndRepliesPost.rootPost.content}">content</pre>
+                                                </div>
+                                                <hr>
+                                                <h4 class="title is-4">Replies</h4>
+                                                <div class="content">
+                                                    <th:block th:each="replyPost : ${rootAndRepliesPost.replyPosts}">
+                                                        <div class="card">
+                                                            <header class="card-header">
+                                                                <p class="card-header-title" th:text="${replyPost.author}">author</p>
+                                                            </header>
+                                                            <div class="card-content">
+                                                                <div class="content">
+                                                                    <p class="time" th:text="${replyPost.sendUnixTime}">sendUnixTime</p>
+                                                                    <pre class="has-background-white" th:text="${replyPost.content}">content</pre>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </th:block>
+                                                </div>
+                                            </div>
+                                            <th:block th:if="${!(rootAndRepliesPost.replyPosts.size() >= 20)}">
+                                                <div class="cell">
+                                                    <div class="content">
+                                                        <h3 class="text is-3">Send reply</h3>
+                                                        <form action="reply" method="post">
+                                                            <input type="text" name="id" th:value="${rootAndRepliesPost.rootPost.id}" hidden>
+                                                            <div class="field">
+                                                                <label class="label">Author</label>
+                                                                <div class="control">
+                                                                    <input class="input" type="text" name="author" required>
+                                                                </div>
+                                                            </div>
+                                                            <div class="field">
+                                                                <label class="label">Content</label>
+                                                                <div class="control">
+                                                                    <textarea class="textarea" cols="7" name="content" required></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div class="field is-grouped">
+                                                                <div class="control">
+                                                                    <button class="button is-link">Send</button>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </th:block>
+                    </div>
                 </div>
             </div>
-            <p class="has-text-centered">No response means you have been abandoned. This is the chat algorithm that I find most efficient.</p>
-            <hr>
-            <div>
-                <h3 class="title is-3">Chat</h3>
+            <div class="is-hidden-desktop is-hidden-tablet">
+                <div>
+                    <h4 class="title is-4">No reply chat is no need.</h4>
+                    <p class="mb-2">There are no rules. No categorized content (in other words, just chat).<br>
+                        You can write anything. <span class="red-text text-accent-3">But</span> if there is no reply,<br>
+                        it will be considered meaningless and the post will be deleted.</p>
+                    <h4 class="title is-4">Why need respond?</h4>
+                    <p class="mb-4">This is because many people don't really want to reply to posts that have gone unanswered for a long time (an easy example is comments on YouTube).<br>
+                        So we consider unanswered posts to be unavoidable, but wasteful.</p>
+                    <p class="has-text-centered">No response means you have been abandoned.<br>
+                        This is the chat algorithm that I find most efficient.</p>
+                </div>
+                <hr>
+                <div th:switch="${result}">
+                    <p th:case ==-1 class="has-text-danger">A server-side problem has occurred.</p>
+                    <p th:case ==0 class="has-text-success">Success!</p>
+                    <p th:case ==1 class="has-text-danger">The author must be less than 30 bytes.</p>
+                    <p th:case ==2 class="has-text-danger">The content must be less than 512 bytes.</p>
+                    <p th:case ==3 class="has-text-danger">Root post not found./p>
+                    <p th:case ==4 class="has-text-danger">The maximum number of replies has been reached.。</p>
+                </div>
+                <h3 class="title is-3">New post</h3>
+                <form action="root" method="post">
+                    <div class="field">
+                        <label class="label">Author</label>
+                        <div class="control">
+                            <input class="input" type="text" name="author" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Content</label>
+                        <div class="control">
+                            <textarea class="textarea" cols="7" name="content" required></textarea>
+                        </div>
+                    </div>
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <button class="button is-link">Send</button>
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <div>
+                    <h3 class="title is-3">Posts</h3>
+                    <th:block th:each="rootAndRepliesPost : ${rootAndRepliesPosts}">
+                        <div class="card">
+                            <header class="card-header">
+                                <p class="card-header-title" th:text="${rootAndRepliesPost.rootPost.author}">author</p>
+                            </header>
+                            <div class="card-content">
+                                <div class="content">
+                                    <p class="time" th:text="${rootAndRepliesPost.rootPost.sendUnixTime}">sendUnixTime</p>
+                                    <pre class="has-background-white" th:text="${rootAndRepliesPost.rootPost.content}">content</pre>
+                                </div>
+                                <section class="accordions">
+                                    <article class="accordion">
+                                        <div class="accordion-header toggle">
+                                            <p>View details (Click me)</p>
+                                        </div>
+                                        <div class="accordion-body">
+                                            <div class="accordion-content">
+                                                <h4 class="title is-4">Replies</h4>
+                                                <th:block th:each="replyPost : ${rootAndRepliesPost.replyPosts}">
+                                                    <div class="card">
+                                                        <header class="card-header">
+                                                            <p class="card-header-title" th:text="${replyPost.author}">author</p>
+                                                        </header>
+                                                        <div class="card-content">
+                                                            <div class="content">
+                                                                <p class="time" th:text="${replyPost.sendUnixTime}">sendUnixTime</p>
+                                                                <pre class="has-background-white" th:text="${replyPost.content}">content</pre>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </th:block>
+                                                <th:block th:if="${!(rootAndRepliesPost.replyPosts.size() >= 20)}">
+                                                    <h4 class="title is-4 mt-4">Send reply</h4>
+                                                    <form action="reply" method="post">
+                                                        <input type="text" name="id" th:value="${rootAndRepliesPost.rootPost.id}" hidden>
+                                                        <div class="field">
+                                                            <label class="label">Author</label>
+                                                            <div class="control">
+                                                                <input class="input" type="text" name="author" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="field">
+                                                            <label class="label">Content</label>
+                                                            <div class="control">
+                                                                <textarea class="textarea" cols="7" name="content" required></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="field is-grouped">
+                                                            <div class="control">
+                                                                <button class="button is-link">Send</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </th:block>
+                                            </div>
+                                        </div>
+                                    </article>
+                                </section>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
             </div>
         </div>
+        <script src="https://cdn.jsdelivr.net/npm/bulma-accordion@2.0.1/dist/js/bulma-accordion.min.js"></script>
+        <script>
+            function unixTimeToFormated(unixTime){
+                const date = new Date(unixTime);
+                return date.toLocaleDateString()+" "+date.toLocaleTimeString();
+            }
+            const accordions = bulmaAccordion.attach();
+            const timePs = document.getElementsByClassName("time");
+            for (let i = 0; i < timePs.length; i++){
+                document.getElementsByClassName("time")[i].innerHTML = unixTimeToFormated(Number(timePs[i].innerHTML));
+            }
+        </script>
     </body>
 </html>
